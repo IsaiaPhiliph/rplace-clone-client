@@ -7,7 +7,10 @@ import "./App.css";
 
 const width = 1024;
 const height = 1024;
-const socketUrl = "ws://localhost:8080";
+// const socketUrl = "ws://localhost:8080";
+const socketUrl = "ws://34.148.142.242/";
+// const imageUrl = "http://localhost:8080/place.png";
+const imageUrl = "http://34.148.142.242/place.png";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -106,7 +109,7 @@ function App() {
 
   useEffect(() => {
     const img = new Image(width, height);
-    img.src = "http://localhost:8080/place.png";
+    img.src = imageUrl;
     img.crossOrigin = "Anonymous";
     img.onload = () => {
       ctx?.drawImage(img, 0, 0);
@@ -208,7 +211,7 @@ function App() {
               </div>
             </div>
           </div>
-          <div className="fixed bottom-0 z-50 left-0 gap-4 right-0 flex items-center justify-between  bg-gray-200 py-2 px-4">
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-4 px-4 py-2 bg-gray-200">
             <label className="flex flex-col">
               <span>Color</span>
 
