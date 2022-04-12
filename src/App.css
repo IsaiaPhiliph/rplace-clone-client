@@ -1,3 +1,10 @@
 #canvas {
-  border: 1px solid black;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.App {
+  /* min-height: 100vh; */
 }

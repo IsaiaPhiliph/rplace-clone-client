@@ -1,210 +1,240 @@
+import Panzoom from "panzoom";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import { useLocalStorageValue } from "@mantine/hooks";
+
 import "./App.css";
 
-interface Pixel {
-  r: number;
-  g: number;
-  b: number;
+const width = 1024;
+const height = 1024;
+const socketUrl = "ws://localhost:8080";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const initial_width = 200;
-const initial_height = 200;
-
-const randomNumber = (min: number, max: number) => {
-  return Math.floor(Math.random() * (max - min) + min);
-};
-
-const randomRGB = () => randomNumber(0, 256);
-
 function App() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [width, setWidth] = useState(initial_width);
-  const [height, setHeight] = useState(initial_height);
-  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>();
+  const [socket, setSocket] = useState<Socket>();
 
-  const getInitialArray = (width: number, height: number) => {
-    const arr = new Uint8ClampedArray(width * height * 4);
-    for (let i = 0; i < arr.length; i += 4) {
-      arr[i] = randomRGB();
-      arr[i + 1] = randomRGB();
-      arr[i + 2] = randomRGB();
-      arr[i + 3] = 255;
-    }
-    return arr;
+  const connectToSocket = () => {
+    const socket = io(socketUrl, {
+      reconnection: false,
+    });
+
+    socket.on("connect", () => {
+      console.log("Socket connected", socket);
+      setSocket(socket);
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.error("Socket disconected, reason: ", reason);
+      setSocket(undefined);
+      alert("Socket disconected, reason: " + reason);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.log("Error connecting to socket: ", error);
+      setSocket(undefined);
+      alert("Error connecting to socket");
+    });
+    return socket;
   };
 
-  const [pixelArray, setPixelArray] = useState<Uint8ClampedArray>(
-    getInitialArray(width, height)
+  useEffect(() => {
+    const socket = connectToSocket();
+    return () => {
+      socket.removeAllListeners("connect");
+      socket.removeAllListeners("disconnect");
+      socket.removeAllListeners("connect_error");
+    };
+  }, []);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>();
+  const [color, setColor] = useLocalStorageValue({
+    key: "color-selected",
+    defaultValue: { r: 0, g: 0, b: 0 },
+  });
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+
+  const ref = useRef<HTMLDivElement | null>(null);
+  const canvasWrapper = useRef<HTMLDivElement>(null);
+
+  const setPixel = useCallback(
+    (
+      x: number,
+      y: number,
+      color: { r: number; g: number; b: number },
+      emit = false
+    ) => {
+      if (ctx && socket) {
+        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},255)`;
+        ctx.fillRect(x, y, 1, 1);
+        // const data = ctx.getImageData(0, 0, width, height).data;
+        // setPixelArray(data);
+        if (emit) {
+          socket.emit("pixel", [x, y, color.r, color.g, color.b]);
+        }
+      }
+    },
+    [ctx, socket]
   );
 
-  const fillCanvasWithUInt8Array = useCallback(() => {
-    if (ctx) {
-      const img = new ImageData(pixelArray, width, height);
-      ctx.putImageData(img, 0, 0);
-    }
-  }, [ctx, height, pixelArray, width]);
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+        }
+      : null;
+  };
+
+  function rgbToHex(r: number, g: number, b: number) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
 
   useEffect(() => {
-    if (ctx) {
-      fillCanvasWithUInt8Array();
+    if (socket) {
+      socket.on("pixel", (pixel) => {
+        const [x, y, r, g, b] = pixel;
+        setPixel(x, y, { r, g, b });
+      });
     }
-  }, [ctx, fillCanvasWithUInt8Array]);
+  }, [socket, setPixel]);
+
+  useEffect(() => {
+    const img = new Image(width, height);
+    img.src = "http://localhost:8080/place.png";
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0);
+    };
+  }, [ctx, socket]);
+
+  useEffect(() => {
+    const div = ref.current;
+    if (div) {
+      const panzoom = Panzoom(div);
+      panzoom.moveTo(
+        window.innerWidth / 2 - width / 2,
+        window.innerHeight / 2 - height / 2
+      );
+
+      return () => {
+        panzoom.dispose();
+      };
+    }
+  }, [socket]);
+
+  const testLoop = async () => {
+    for (let i = 0; i < width; i++) {
+      for (let j = 0; j < height; j++) {
+        await sleep(10);
+        setPixel(i, j, { r: 0, g: 0, b: 0 }, true);
+      }
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    const wrapper = canvasWrapper.current;
+    if (canvas && wrapper) {
+      const ctx = canvas.getContext("2d");
 
-    if (canvas) {
-      const ctx = canvas?.getContext("2d");
       setCtx(ctx);
       const listener = (ev: MouseEvent) => {
-        const [x, y] = [ev.offsetX, ev.offsetY];
-        console.log(pixelArray.length);
-        console.log(x * y * 4);
-        setPixelArray((prev) => {
-          const next = [...prev];
-          next[x * y * 4] = 255;
-          next[x * y * 4 + 1] = 255;
-          next[x * y * 4 + 2] = 255;
-          next[x * y * 4 + 3] = 255;
-          return new Uint8ClampedArray(next);
-        });
+        ev.preventDefault();
+        ev.stopPropagation();
+        console.log(ev.offsetX, ev.offsetY);
+        const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
+        setPixel(x, y, color, true);
       };
-      canvas.addEventListener("click", listener);
-    }
-  }, [pixelArray]);
-
-  const getNewPixelArray = () => {
-    const newArray = getInitialArray(width, height);
-    setPixelArray(newArray);
-  };
-
-  const clearCanvas = () => {
-    if (ctx && canvasRef.current) {
-      const { width, height } = canvasRef.current;
-      ctx.clearRect(0, 0, width, height);
-    }
-  };
-
-  const handleDrawRectangles = () => {
-    if (ctx) {
-      ctx.fillStyle = "rgb(200,0,0)";
-      ctx.fillRect(10, 10, 50, 50);
-
-      ctx.fillStyle = "rgba(0,0,200,0.5)";
-      ctx.fillRect(30, 30, 50, 50);
-    }
-  };
-
-  const handleDrawGrid = () => {
-    if (ctx && canvasRef.current) {
-      const { width, height } = canvasRef.current;
-      for (let i = 0; i < width; i += 10) {
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(i, 0, 1, height);
-      }
-      for (let i = 0; i < height; i += 10) {
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(0, i, width, 1);
-      }
-    }
-  };
-
-  const drawTriangle = () => {
-    if (ctx) {
-      ctx.beginPath();
-      ctx.moveTo(75, 50);
-      ctx.lineTo(100, 75);
-      ctx.lineTo(100, 25);
-      ctx.fill();
-    }
-  };
-
-  const drawFace = () => {
-    if (ctx) {
-      ctx.beginPath();
-      ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
-      ctx.moveTo(110, 75);
-      ctx.arc(75, 75, 35, 0, Math.PI, false); // Mouth (clockwise)
-      ctx.moveTo(65, 65);
-      ctx.arc(60, 65, 5, 0, Math.PI * 2, true); // Left eye
-      ctx.moveTo(95, 65);
-      ctx.arc(90, 65, 5, 0, Math.PI * 2, true); // Right eye
-      ctx.stroke();
-    }
-  };
-
-  const drawArcs = () => {
-    if (ctx) {
-      ctx.fillStyle = "rgb(0,0,0)";
-      for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 3; j++) {
-          ctx.beginPath();
-          const x = 25 + j * 50; // x coordinate
-          const y = 25 + i * 50; // y coordinate
-          const radius = 20; // Arc radius
-          const startAngle = 0; // Starting point on circle
-          const endAngle = Math.PI + (Math.PI * j) / 2; // End point on circle
-          const counterclockwise = i % 2 !== 0; // clockwise or counterclockwise
-
-          ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
-
-          if (i > 1) {
-            ctx.fill();
-          } else {
-            ctx.stroke();
+      const copyColor = (ev: MouseEvent) => {
+        if (ctx) {
+          if (ev.button === 1) {
+            const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
+            const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
+            setColor({ r, g, b });
           }
         }
-      }
+      };
+      const setCursor = (ev: MouseEvent) => {
+        const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
+        setCursorPos({ x, y });
+      };
+
+      wrapper.addEventListener("contextmenu", listener);
+      wrapper.addEventListener("auxclick", copyColor);
+      wrapper.addEventListener("mousemove", setCursor);
+      return () => {
+        wrapper.removeEventListener("contextmenu", listener);
+        wrapper.removeEventListener("auxclick", copyColor);
+        wrapper.removeEventListener("mousemove", setCursor);
+      };
     }
-  };
+  }, [color, setColor, setPixel]);
 
   return (
     <div className="App">
-      <div>
+      {!socket && (
         <div>
-          <label>
-            Width
-            <input
-              type={"number"}
-              value={width}
-              onChange={(e) => setWidth(+e.target.value)}
-            />
-          </label>
+          Not connected
+          <button
+            onClick={() => {
+              const socket = connectToSocket();
+              setSocket(socket);
+            }}
+          >
+            Reconnect
+          </button>
         </div>
-        <div>
-          <label>
-            Height
-            <input
-              type={"number"}
-              value={height}
-              onChange={(e) => setHeight(+e.target.value)}
-            />
-          </label>
-        </div>
-      </div>
-      <div style={{ scale: 1.2 }}>
-        <canvas
-          id="canvas"
-          width={width}
-          height={height}
-          className="canvas"
-          ref={canvasRef}
-        >
-          Canvas not supported on your browser.
-        </canvas>
-      </div>
-      <div>
-        <button onClick={handleDrawRectangles}>Draw rectangles</button>
-        <button onClick={handleDrawGrid}>Draw grid</button>
-        <button onClick={drawTriangle}>Draw triangle</button>
-        <button onClick={drawFace}>Draw face</button>
-        <button onClick={drawArcs}>Draw arcs</button>
-        <button onClick={clearCanvas}>Clear canvas</button>
-        <button onClick={getNewPixelArray}>Get new pixel array</button>
-        <button onClick={fillCanvasWithUInt8Array}>
-          Fill canvas uint8 array
-        </button>
-      </div>
+      )}
+      {socket && (
+        <>
+          <div className="min-h-screen overflow-hidden bg-gray-100">
+            <div className="w-max" ref={ref}>
+              <div style={{ padding: 0.5 }} ref={canvasWrapper}>
+                <canvas
+                  id="canvas"
+                  width={width}
+                  height={height}
+                  className="canvas"
+                  ref={canvasRef}
+                >
+                  Canvas not supported on your browser.
+                </canvas>
+              </div>
+            </div>
+          </div>
+          <div className="fixed bottom-0 z-50 left-0 gap-4 right-0 flex items-center justify-between  bg-gray-200 py-2 px-4">
+            <label className="flex flex-col">
+              <span>Color</span>
+
+              <input
+                type="color"
+                className="bg-gray-200"
+                value={rgbToHex(color.r, color.g, color.b)}
+                onChange={(hex) => {
+                  const rgb = hexToRgb(hex.target.value);
+                  if (rgb) {
+                    setColor(rgb);
+                  }
+                }}
+              />
+            </label>
+            <button onClick={testLoop}>Test</button>
+            <div className="flex flex-col">
+              <div className="font-bold">Cursor position</div>
+              <div>
+                <span className="font-bold">X:</span> {cursorPos.x}{" "}
+                <span className="font-bold">Y:</span> {cursorPos.y}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
