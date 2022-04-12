@@ -165,7 +165,7 @@ function App() {
         ev.preventDefault();
 
         if (ctx) {
-          if (ev.button === 2) {
+          if (ev.button === 1) {
             const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
             const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
             setColor({ r, g, b });
@@ -177,12 +177,12 @@ function App() {
         setCursorPos({ x, y });
       };
 
-      wrapper.addEventListener("click", listener);
-      wrapper.addEventListener("contextmenu", copyColor);
+      wrapper.addEventListener("contextmenu", listener);
+      wrapper.addEventListener("auxclick", copyColor);
       wrapper.addEventListener("mousemove", setCursor);
       return () => {
-        wrapper.removeEventListener("click", listener);
-        wrapper.removeEventListener("contextmenu", copyColor);
+        wrapper.removeEventListener("contextmenu", listener);
+        wrapper.removeEventListener("auxclick", copyColor);
         wrapper.removeEventListener("mousemove", setCursor);
       };
     }
@@ -247,11 +247,11 @@ function App() {
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M11.4999 41C8.00642 41 1.01944 38.5238 1.01944 28.619C1.01944 16.2381 0.0666756 10.5238 11.4999 10.5238"
+                    d="M11.4999 41C8.00642 41 1.01944 38.5238 1.01944 28.6191C1.01944 16.2381 0.0666756 10.5238 11.4999 10.5238"
                     stroke="black"
                   />
                   <path
-                    d="M21.9805 22.9048C17.9293 24.3123 14.7539 24.9972 11.5 24.9684M1.01953 22.9048C5.15525 24.2501 8.36405 24.9407 11.5 24.9684M11.5 10.5238V24.9684"
+                    d="M21.9805 22.9048C17.9293 24.3124 14.7539 24.9972 11.5 24.9685M1.01953 22.9048C5.15525 24.2501 8.36405 24.9407 11.5 24.9685M11.5 10.5238V24.9685"
                     stroke="black"
                   />
                   <path
@@ -260,15 +260,19 @@ function App() {
                     strokeLinecap="round"
                   />
                   <path
-                    d="M11.5001 41C14.9936 41 21.9806 38.5238 21.9806 28.619C21.9806 16.2381 22.9333 10.5238 11.5001 10.5238"
+                    d="M11.5001 41C14.9936 41 21.9806 38.5238 21.9806 28.6191C21.9806 16.2381 22.9333 10.5238 11.5001 10.5238"
                     stroke="black"
                   />
-                  <path
-                    d="M9.59448 21.9524V12.4286C2.9251 14.3333 3.87787 20.0476 3.87787 21L9.59448 21.9524Z"
+                  <rect
+                    x="9"
+                    y="14"
+                    width="5"
+                    height="8"
+                    rx="2.5"
                     fill="black"
                   />
                 </svg>
-                Place pixel
+                Copy color
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -300,7 +304,7 @@ function App() {
                     fill="black"
                   />
                 </svg>
-                Copy color
+                Place pixel
               </div>
             </div>
             <div className="flex flex-col">
