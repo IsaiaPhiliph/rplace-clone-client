@@ -8,12 +8,16 @@ import "./App.css";
 const width = 1024;
 const height = 1024;
 // const socketUrl = "ws://localhost:8080";
-const socketUrl = "ws://34.148.142.242/";
+const socketUrl = "wss://isaiaphiliph.com/";
 // const imageUrl = "http://localhost:8080/place.png";
-const imageUrl = "http://34.148.142.242/place.png";
+const imageUrl = "https://isaiaphiliph.com/place.png";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function generateRandomInteger(max: number) {
+  return Math.floor(Math.random() * max) + 1;
 }
 
 function App() {
@@ -134,8 +138,10 @@ function App() {
   const testLoop = async () => {
     for (let i = 0; i < width; i++) {
       for (let j = 0; j < height; j++) {
-        await sleep(10);
-        setPixel(i, j, { r: 0, g: 0, b: 0 }, true);
+        await sleep(100);
+        const x = generateRandomInteger(1023);
+        const y = generateRandomInteger(1023);
+        setPixel(x, y, { r: 0, g: 0, b: 0 }, true);
       }
     }
   };
