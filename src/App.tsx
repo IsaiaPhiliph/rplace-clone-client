@@ -12,6 +12,13 @@ const socketUrl = "wss://isaiaphiliph.com/";
 // const imageUrl = "http://localhost:8080/place.png";
 const imageUrl = "https://isaiaphiliph.com/place.png";
 
+document.body.onmousedown = (e) => {
+  if (e.button === 1) {
+    e.preventDefault();
+    return false;
+  }
+};
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
