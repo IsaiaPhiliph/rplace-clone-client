@@ -1,6 +1,6 @@
 # rplace-clone-client
 
-I clone of the [r/place](https://www.reddit.com/r/place) canvas.
+Clone of the [r/place](https://www.reddit.com/r/place) canvas.
 
 Try it here: [place.isaiaphiliph.com](https://place.isaiaphiliph.com/)
 
