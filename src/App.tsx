@@ -155,11 +155,15 @@ function App() {
       setCtx(ctx);
       const listener = (ev: MouseEvent) => {
         ev.preventDefault();
-        console.log(ev.button);
-
-        console.log(ev.offsetX, ev.offsetY);
-        const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
-        setPixel(x, y, color, true);
+        if (ev.ctrlKey && ctx) {
+          const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
+          const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
+          setColor({ r, g, b });
+        } else {
+          console.log(ev.offsetX, ev.offsetY);
+          const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
+          setPixel(x, y, color, true);
+        }
       };
       const copyColor = (ev: MouseEvent) => {
         ev.preventDefault();
