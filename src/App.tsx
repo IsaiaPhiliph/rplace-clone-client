@@ -220,7 +220,7 @@ function App() {
               </div>
             </div>
           </div>
-          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-4 px-4 py-2 bg-gray-200">
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-4 px-4 py-2 bg-gray-200 bg-opacity-50 backdrop-blur-sm ">
             <label className="flex flex-col">
               <span>Color</span>
 
@@ -236,12 +236,84 @@ function App() {
                 }}
               />
             </label>
-            <button onClick={testLoop}>Test</button>
+            <div className="flex items-center gap-4">
+              <span className="text-lg font-medium">Controls</span>
+              <div className="flex items-center gap-2">
+                <svg
+                  width="23"
+                  height="42"
+                  viewBox="0 0 23 42"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.4999 41C8.00642 41 1.01944 38.5238 1.01944 28.619C1.01944 16.2381 0.0666756 10.5238 11.4999 10.5238"
+                    stroke="black"
+                  />
+                  <path
+                    d="M21.9805 22.9048C17.9293 24.3123 14.7539 24.9972 11.5 24.9684M1.01953 22.9048C5.15525 24.2501 8.36405 24.9407 11.5 24.9684M11.5 10.5238V24.9684"
+                    stroke="black"
+                  />
+                  <path
+                    d="M11.5001 10.5238C10.5473 5.7619 18.1694 6.71429 11.5001 1"
+                    stroke="black"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M11.5001 41C14.9936 41 21.9806 38.5238 21.9806 28.619C21.9806 16.2381 22.9333 10.5238 11.5001 10.5238"
+                    stroke="black"
+                  />
+                  <path
+                    d="M9.59448 21.9524V12.4286C2.9251 14.3333 3.87787 20.0476 3.87787 21L9.59448 21.9524Z"
+                    fill="black"
+                  />
+                </svg>
+                Place pixel
+              </div>
+              <div className="flex items-center gap-2">
+                <svg
+                  width="23"
+                  height="42"
+                  viewBox="0 0 23 42"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.4999 41C8.00642 41 1.01944 38.5238 1.01944 28.6191C1.01944 16.2381 0.0666756 10.5238 11.4999 10.5238"
+                    stroke="black"
+                  />
+                  <path
+                    d="M21.9805 22.9048C17.9293 24.3124 14.7539 24.9972 11.5 24.9685M1.01953 22.9048C5.15525 24.2501 8.36405 24.9407 11.5 24.9685M11.5 10.5238V24.9685"
+                    stroke="black"
+                  />
+                  <path
+                    d="M11.5001 10.5238C10.5473 5.7619 18.1694 6.71429 11.5001 1"
+                    stroke="black"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M11.5001 41C14.9936 41 21.9806 38.5238 21.9806 28.6191C21.9806 16.2381 22.9333 10.5238 11.5001 10.5238"
+                    stroke="black"
+                  />
+                  <path
+                    d="M13.4055 21.9524V12.4286C20.0749 14.3333 19.1221 20.0476 19.1221 21L13.4055 21.9524Z"
+                    fill="black"
+                  />
+                </svg>
+                Copy color
+              </div>
+            </div>
             <div className="flex flex-col">
-              <div className="font-bold">Cursor position</div>
-              <div>
-                <span className="font-bold">X:</span> {cursorPos.x}{" "}
-                <span className="font-bold">Y:</span> {cursorPos.y}
+              <div className="font-medium font-lg">Cursor position</div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-bold">X:</span>
+                  <span className="text-sm font-light">{cursorPos.x}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-bold">Y:</span>
+                  <span className="text-sm font-light">{cursorPos.y}</span>
+                </div>
               </div>
             </div>
           </div>
