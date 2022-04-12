@@ -155,14 +155,17 @@ function App() {
       setCtx(ctx);
       const listener = (ev: MouseEvent) => {
         ev.preventDefault();
-        ev.stopPropagation();
+        console.log(ev.button);
+
         console.log(ev.offsetX, ev.offsetY);
         const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
         setPixel(x, y, color, true);
       };
       const copyColor = (ev: MouseEvent) => {
+        ev.preventDefault();
+
         if (ctx) {
-          if (ev.button === 1) {
+          if (ev.button === 2) {
             const [x, y] = [ev.offsetX - 1, ev.offsetY - 1];
             const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
             setColor({ r, g, b });
@@ -174,12 +177,12 @@ function App() {
         setCursorPos({ x, y });
       };
 
-      wrapper.addEventListener("contextmenu", listener);
-      wrapper.addEventListener("auxclick", copyColor);
+      wrapper.addEventListener("click", listener);
+      wrapper.addEventListener("contextmenu", copyColor);
       wrapper.addEventListener("mousemove", setCursor);
       return () => {
-        wrapper.removeEventListener("contextmenu", listener);
-        wrapper.removeEventListener("auxclick", copyColor);
+        wrapper.removeEventListener("click", listener);
+        wrapper.removeEventListener("contextmenu", copyColor);
         wrapper.removeEventListener("mousemove", setCursor);
       };
     }
